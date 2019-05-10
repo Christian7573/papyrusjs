@@ -98,7 +98,7 @@ if ( cluster.isMaster ) {
         }, err => { if (err === depower_token) throw err } )
         .then( resolve, () => null );
 
-        async function  extract_world( world_path ) {
+        async function extract_world( world_path ) {
             try {
                 const extension_regex = /\..+$/,
                       zip_path        = world_path.replace( extension_regex, ".zip" );
