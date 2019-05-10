@@ -83,17 +83,18 @@ if ( cluster.isMaster ) {
     console.log( 'Threads: ' + argv.threads );
 
     // Download textures if textures can't be found
-    // DOWNLOADING TEXTURES SHOULD BE SYNCHRONOUS IF POSSIBLE, SO THE LOOKUP-TABLES BELOW GET REQUIRED WHEN ALL FILES ARE PRESENT!
-    new Promise( ( resolve, reject ) => {
+    Promise.resolve()
+    .then(() => {
         if ( ( argv[ 'force-download' ] == true ) || ( !fs.existsSync( path.normalize( argv.textures + 'blocks.json' ) ) ) ) {
             console.log( 'Texture directory is missing or ' + colors.italic( '--force-download' ) + ' has been specified. Downloading...' );
-            require( './src/downloadTextures.js' )( path.resolve( argv.textures ) )
-                .then( () => { resolve(); } )
-                .catch( ( err ) => { throw err; } );
-        } else {
-            resolve();
+            return require( './src/downloadTextures.js' )( path.resolve( argv.textures ) )
         }
-    } ).then( () => {
+    })
+    .catch(err => {
+        console.log( `${colors.red('[ERROR]')} Couldn't download textures` );
+        console.error(err);
+    })
+    .then( () => {
         // Run
         init( path.normalize( argv.world ), path.normalize( argv.output ) );
     } )
