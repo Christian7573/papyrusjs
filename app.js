@@ -83,7 +83,31 @@ if ( cluster.isMaster ) {
     console.log( 'Threads: ' + argv.threads );
 
     // Download textures if textures can't be found
-    Promise.resolve()
+    fs.promises.stat( path.normalize( argv.world + "/db" ) )
+    .then( statz => new Promise(( resolve, reject ) => {
+        const depower_token = {};
+        if ( statz.isDirectory() ) { resolve(); return; }
+        let world_path = path.normalize( argv.world + ".mcworld" )
+        fs.promises.stat( world_path )
+        .then( statz => {
+            if (statz.isFile()) { extract_world( world_path ); throw depower_token; }
+        }, () => null )
+        .then( () => fs.promises.stat( world_path = path.normalize( argv.world + ".zip" ) ) )
+        .then( statz => {
+            if (statz.iFile()) { extract_world( world_path ); throw depower_token; }
+        }, err => { if (err === depower_token) throw err } )
+        .then( resolve, () => null );
+
+        async function  extract_world( world_path ) {
+            const zip_path = world_path.replace(/\..+$/, ".zip");
+            if ( world_path !== zip_path ) await fs.promises.rename( world_path, zip_path );
+            
+        }
+    }) )
+    .catch(err => {
+        console.log( `${colors.red('[ERROR]')} Couldn't locate world` );
+        console.error( err );
+    })
     .then(() => {
         if ( ( argv[ 'force-download' ] == true ) || ( !fs.existsSync( path.normalize( argv.textures + 'blocks.json' ) ) ) ) {
             console.log( 'Texture directory is missing or ' + colors.italic( '--force-download' ) + ' has been specified. Downloading...' );
@@ -92,7 +116,7 @@ if ( cluster.isMaster ) {
     })
     .catch(err => {
         console.log( `${colors.red('[ERROR]')} Couldn't download textures` );
-        console.error(err);
+        console.error( err );
     })
     .then( () => {
         // Run
