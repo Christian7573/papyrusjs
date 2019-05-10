@@ -99,9 +99,18 @@ if ( cluster.isMaster ) {
         .then( resolve, () => null );
 
         async function  extract_world( world_path ) {
-            const zip_path = world_path.replace(/\..+$/, ".zip");
-            if ( world_path !== zip_path ) await fs.promises.rename( world_path, zip_path );
-            
+            try {
+                const extension_regex = /\..+$/,
+                      zip_path        = world_path.replace( extension_regex, ".zip" );
+                let   extract_path    = world_path.replace( extension_regex, "" );
+                if ( world_path !== zip_path ) await fs.promises.rename( world_path, zip_path );
+                if ( zip_path === extract_path ) extract_path += "_extracted";
+                argv.world = extract_path;
+                lib_extract(zip_path, { dir: extract_path }, err => {
+                    if (err !== null && err !== undefined) reject(err);
+                    else resolve();
+                });
+            } catch(err) { reject(err); }
         }
     }) )
     .catch(err => {
